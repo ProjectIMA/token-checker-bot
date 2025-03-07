@@ -26,7 +26,7 @@ node -v
 
 ### 2. Clone the Repository
 ```sh
-git clone https://github.com/your-username/discord-token-checker.git
+git clone https://github.com/ProjectIMA/token-checker-bot/
 cd discord-token-checker
 ```
 
