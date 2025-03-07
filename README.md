@@ -2,7 +2,7 @@
 
 This is an **open-source** Discord bot that allows users to check the validity of multiple Discord tokens by uploading a `.txt` file.
 
-## Add the Bot to Your Server
+## Add the Bot to Your Server (optional)
 If you don't want to go through this whole setup, you can also add our hosted bot below:
 [Invite the Bot](https://discord.com/oauth2/authorize?client_id=1345469589651325059&permissions=8&integration_type=0&scope=bot)
 
