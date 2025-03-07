@@ -52,10 +52,6 @@ node bot.js
 ## **Privacy & Data Protection**
 We take **privacy seriously**. This bot **does not collect, store, or share any user data**. All token verification is done locally on your machine, and no data is saved or transmitted elsewhere.
 
-## Add the Bot to Your Server
-If you don't want to go through this whole setup you can also add our hosted bot bellow:
-[Invite the Bot](https://discord.com/oauth2/authorize?client_id=1345469589651325059&permissions=8&integration_type=0&scope=bot)
-
 ## License
 This project is **open source**. Feel free to modify, share, and improve it.
 
