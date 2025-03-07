@@ -2,6 +2,10 @@
 
 This is an **open-source** Discord bot that allows users to check the validity of multiple Discord tokens by uploading a `.txt` file.
 
+## Add the Bot to Your Server
+If you don't want to go through this whole setup you can also add our hosted bot bellow:
+[Invite the Bot](https://discord.com/oauth2/authorize?client_id=1345469589651325059&permissions=8&integration_type=0&scope=bot)
+
 ## Features
 - Checks if tokens are **valid** or **invalid**.
 - Identifies if the account has **Nitro**, **email verification**, **phone verification**, and **2FA enabled**.
