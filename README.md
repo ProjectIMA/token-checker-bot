@@ -44,7 +44,7 @@ If you don’t have Git, you can manually download the ZIP file from GitHub and 
 ### 4. Install Dependencies
 Inside the `token-checker-bot` folder, run:
 ```sh
-npm install
+npm install discord.js discord.js-selfbot-v13 dotenv axios moment
 ```
 This will install all required dependencies for the bot.
 
@@ -54,11 +54,6 @@ This will install all required dependencies for the bot.
 - **dotenv** (For environment variables management)
 - **axios** (For making API requests)
 - **moment** (For date/time formatting)
-
-To manually install these dependencies, run:
-```sh
-npm install discord.js discord.js-selfbot-v13 dotenv axios moment
-```
 
 ### 5. Set Up Environment Variables
 Create a new file named `.env` in the `token-checker-bot` folder and add the following:
