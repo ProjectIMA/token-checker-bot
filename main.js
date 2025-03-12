@@ -1,7 +1,9 @@
 require('dotenv').config();
+const chalk = require('chalk');
+const fs = require('fs');
 
-const { Client: SelfbotClient } = require("discord.js-selfbot-v13");
 const { Client, GatewayIntentBits, EmbedBuilder, REST, Routes, AttachmentBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require("discord.js");
+const { Client: SelfbotClient } = require("discord.js-selfbot-v13");
 const axios = require("axios");
 const moment = require("moment");
 
@@ -41,14 +43,14 @@ const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_BOT_TOKEN)
 
 async function registerCommands() {
     try {
-        console.log('Started refreshing application (/) commands.');
+        console.log(chalk.blue('🔄 Started refreshing application (/) commands.'));
         await rest.put(
             Routes.applicationCommands(process.env.DISCORD_CLIENT_ID),
             { body: commands },
         );
-        console.log('Successfully reloaded application (/) commands.');
+        console.log(chalk.green('✅ Successfully reloaded application (/) commands.'));
     } catch (error) {
-        console.error(error);
+        console.error(chalk.red('❌ Error refreshing commands:'), error);
     }
 }
 
@@ -60,7 +62,7 @@ async function checkToken(token) {
     try {
         await selfbotClient.login(token);
     } catch (error) {
-        console.log(`Token: ${token.slice(0, 20)}... is invalid!`);
+        console.log(chalk.red(`❌ Token: ${token.slice(0, 20)}... is invalid!`));
         invalidTokens.push(token);
         totalScanned++;
         return;
@@ -68,13 +70,13 @@ async function checkToken(token) {
 
     const user = selfbotClient.user;
     if (user) {
-        console.log(`\nToken: ${token.slice(0, 20)}... is valid!`);
-        console.log(`Username: ${user.tag}`);
-        console.log(`User ID: ${user.id}`);
-        console.log(`Email Verified: ${user.verified ? "Yes" : "No"}`);
-        console.log(`2FA Enabled: ${user.mfaEnabled ? "Yes" : "No"}`);
-        console.log(`Phone Verified: ${user.phone ? "Yes" : "No"}`);
-        console.log(`Join Date: ${user.createdAt.toISOString()}`);
+        console.log(chalk.green(`\n✅ Token: ${token.slice(0, 20)}... is valid!`));
+        console.log(chalk.blue(`👤 Username: ${user.tag}`));
+        console.log(chalk.blue(`🆔 User ID: ${user.id}`));
+        console.log(chalk.blue(`📧 Email Verified: ${user.verified ? "✅ Yes" : "❌ No"}`));
+        console.log(chalk.blue(`🔒 2FA Enabled: ${user.mfaEnabled ? "✅ Yes" : "❌ No"}`));
+        console.log(chalk.blue(`📱 Phone Verified: ${user.phone ? "✅ Yes" : "❌ No"}`));
+        console.log(chalk.blue(`📅 Join Date: ${user.createdAt.toISOString()}`));
 
         if (user.verified) emailConnected++;
         if (user.phone) phoneConnected++;
@@ -89,12 +91,13 @@ async function checkToken(token) {
         const nitroStatus = nitroTypes[user.premiumType] || "Inactive";
         if (nitroStatus !== "Inactive") {
             nitroCount++;
-            console.log(`Nitro Status: ${nitroStatus}`);
+            console.log(chalk.magenta(`💎 Nitro Status: ${nitroStatus}`));
         } else {
-            console.log("Nitro Status: Inactive");
+            console.log(chalk.gray("💎 Nitro Status: Inactive"));
         }
 
         const accountAge = moment().diff(moment(user.createdAt), 'days');
+        console.log(chalk.blue(`📅 Account Age: ${accountAge} days`));
 
         let boostsAvailable = 0;
         try {
@@ -105,17 +108,17 @@ async function checkToken(token) {
             });
 
             boostsAvailable = response.data.filter(slot => slot.cooldown_ends_at === null).length;
-            console.log(`Boosts Available (API): ${boostsAvailable}`);
+            console.log(chalk.blue(`🚀 Boosts Available (API): ${boostsAvailable}`));
         } catch (error) {
-            console.log("Failed to fetch boost information from API.");
+            console.log(chalk.red("❌ Failed to fetch boost information from API."));
         }
 
         const canBoost = nitroStatus !== "Inactive" && boostsAvailable > 0;
         if (canBoost) {
-            console.log("This token CAN boost a server.");
+            console.log(chalk.green("✅ This token CAN boost a server."));
             canBoostCount++;
         } else {
-            console.log("This token CANNOT boost a server.");
+            console.log(chalk.red("❌ This token CANNOT boost a server."));
         }
 
         validTokens.push({
@@ -132,7 +135,7 @@ async function checkToken(token) {
             canBoost: canBoost,
         });
     } else {
-        console.log("Failed to fetch user information.");
+        console.log(chalk.red("❌ Failed to fetch user information."));
     }
 
     totalScanned++;
@@ -140,8 +143,26 @@ async function checkToken(token) {
     selfbotClient.destroy();
 }
 
+function splitIntoPages(tokens, pageSize) {
+    const pages = [];
+    for (let i = 0; i < tokens.length; i += pageSize) {
+        pages.push(tokens.slice(i, i + pageSize));
+    }
+    return pages;
+}
+
+function formatToken(token) {
+    const parts = token.split('@');
+    if (parts.length < 2) {
+        return token;
+    }
+
+    const tokenPart = parts[parts.length - 1].split(':').pop();
+    return tokenPart;
+}
+
 client.once('ready', async () => {
-    console.log(`Logged in as ${client.user.tag}`);
+    console.log(chalk.green(`✅ Logged in as ${client.user.tag}`));
     await registerCommands();
 });
 
@@ -168,73 +189,81 @@ client.on('interactionCreate', async interaction => {
         boostAvailableCount = 0;
         canBoostCount = 0;
 
-        let summaryEmbed = new EmbedBuilder()
-            .setColor('#0000FF')
-            .setTitle('Discord Token Checker')
-            .setDescription('Checking tokens...')
-            .addFields(
-                { name: '✅ [💎] Valid Tokens (Nitro) :', value: 'None', inline: false },
-                { name: '✅ Valid Tokens (Non Nitro):', value: 'None', inline: false },
-                { name: '❌ Invalid Tokens:', value: 'None', inline: false }
-            );
-
-        const sendSummaryButton = new ButtonBuilder()
-            .setCustomId('send_summary')
-            .setLabel('Send Summary to DM')
-            .setStyle(ButtonStyle.Primary);
-
-        const actionRow = new ActionRowBuilder().addComponents(sendSummaryButton);
-
-        let message;
-        if (interaction.channel) {
-            message = await interaction.followUp({ embeds: [summaryEmbed], components: [actionRow] });
-        } else {
-            message = await interaction.user.send({ embeds: [summaryEmbed], components: [actionRow] });
-        }
-
         const response = await axios.get(attachment.url);
         const tokens = response.data.split("\n").filter(token => token.trim());
 
-        for (const token of tokens) {
-            await checkToken(token.trim());
-            await new Promise(resolve => setTimeout(resolve, 1));
+        const formattedTokens = tokens.map(token => formatToken(token.trim()));
 
+        fs.writeFile('formattedtokens.txt', formattedTokens.join('\n'), (err) => {
+            if (err) {
+                console.error(chalk.red('❌ Error writing formatted tokens to file:'), err);
+            } else {
+                console.log(chalk.green('✅ Formatted tokens saved to "formattedtokens.txt".'));
+            }
+        });
+
+        const createSummaryEmbed = (currentNitroPage = 0, currentNonNitroPage = 0, currentInvalidPage = 0) => {
             const nitroTokens = validTokens.filter(t => t.nitroStatus !== "Inactive");
             const nonNitroTokens = validTokens.filter(t => t.nitroStatus === "Inactive");
 
-            summaryEmbed = new EmbedBuilder()
+            const nitroTokensPages = splitIntoPages(nitroTokens, 9);
+            const nonNitroTokensPages = splitIntoPages(nonNitroTokens, 9);
+            const invalidTokensPages = splitIntoPages(invalidTokens, 9);
+
+            return new EmbedBuilder()
                 .setColor('#0000FF')
                 .setTitle('Discord Token Checker')
                 .addFields(
                     {
                         name: '✅ [💎] Valid Tokens (Nitro):',
-                        value: nitroTokens.map(t => `- Valid [NITRO] [BOOSTS: ${t.boostsAvailable}] [AGE: ${t.accountAge}] [EV: ${t.emailVerified}] [PV: ${t.phoneVerified}] – ${t.token.slice(0, 20)}***********`).join('\n') || 'None',
+                        value: nitroTokensPages[currentNitroPage]?.map(t => `- Valid [NITRO] [BOOSTS: ${t.boostsAvailable}] [AGE: ${t.accountAge}] [EV: ${t.emailVerified}] [PV: ${t.phoneVerified}] – ${t.token.slice(0, 20)}***********`).join('\n') || 'None',
                         inline: false
                     },
                     {
                         name: '✅ Valid Tokens (Non Nitro):',
-                        value: nonNitroTokens.map(t => `- Valid [AGE: ${t.accountAge}] [EV: ${t.emailVerified}] [PV: ${t.phoneVerified}] – ${t.token.slice(0, 20)}***********`).join('\n') || 'None',
+                        value: nonNitroTokensPages[currentNonNitroPage]?.map(t => `- Valid [AGE: ${t.accountAge}] [EV: ${t.emailVerified}] [PV: ${t.phoneVerified}] – ${t.token.slice(0, 20)}***********`).join('\n') || 'None',
                         inline: false
                     },
                     {
                         name: '❌ Invalid Tokens:',
-                        value: invalidTokens.map(t => `- Invalid – ${t.slice(0, 20)}***********`).join('\n') || 'None',
+                        value: invalidTokensPages[currentInvalidPage]?.map(t => `- Invalid – ${t.slice(0, 20)}***********`).join('\n') || 'None',
                         inline: false
                     }
                 );
+        };
 
-            if (interaction.channel) {
-                await message.edit({ embeds: [summaryEmbed], components: [actionRow] });
-            } else {
-                await message.edit({ embeds: [summaryEmbed], components: [actionRow] });
-            }
+        const previousButton = new ButtonBuilder()
+            .setCustomId('previous')
+            .setLabel('Previous')
+            .setStyle(ButtonStyle.Primary)
+            .setDisabled(true);
+
+        const nextButton = new ButtonBuilder()
+            .setCustomId('next')
+            .setLabel('Next')
+            .setStyle(ButtonStyle.Primary)
+            .setDisabled(true);
+
+        const sendSummaryButton = new ButtonBuilder()
+            .setCustomId('send_summary')
+            .setLabel('Send Summary to DM')
+            .setStyle(ButtonStyle.Success);
+
+        const actionRow = new ActionRowBuilder().addComponents(previousButton, nextButton, sendSummaryButton);
+
+        let message = await interaction.followUp({ embeds: [createSummaryEmbed()], components: [actionRow] });
+
+        for (const token of formattedTokens) {
+            await checkToken(token.trim());
+            await new Promise(resolve => setTimeout(resolve, 1));
+
+            await message.edit({ embeds: [createSummaryEmbed()], components: [actionRow] });
         }
 
-        const nitroTokens = validTokens.filter(t => t.nitroStatus !== "Inactive");
-        const nonNitroTokens = validTokens.filter(t => t.nitroStatus === "Inactive");
+        console.log(chalk.green('✅ Done checking tokens!'));
 
-        const nitroTokensContent = nitroTokens.map(t => t.token).join('\n');
-        const nonNitroTokensContent = nonNitroTokens.map(t => t.token).join('\n');
+        const nitroTokensContent = validTokens.filter(t => t.nitroStatus !== "Inactive").map(t => t.token).join('\n');
+        const nonNitroTokensContent = validTokens.filter(t => t.nitroStatus === "Inactive").map(t => t.token).join('\n');
         const invalidTokensContent = invalidTokens.join('\n');
 
         const nitroTokensBuffer = Buffer.from(nitroTokensContent, 'utf-8');
@@ -250,13 +279,15 @@ client.on('interactionCreate', async interaction => {
             content: 'Here are the valid and invalid tokens:'
         });
 
-        const filter = (i) => i.customId === 'send_summary' && i.user.id === interaction.user.id;
-        const collector = interaction.channel.createMessageComponentCollector({ filter, time: 60000 });
+        const filter = (i) => i.user.id === interaction.user.id;
+        const collector = message.createMessageComponentCollector({ filter, time: 60000 });
 
         collector.on('collect', async (i) => {
-            await i.deferUpdate();
-            await interaction.user.send({ embeds: [summaryEmbed] });
-            await i.followUp({ content: 'Summary sent to your DMs!', ephemeral: true });
+            if (i.customId === 'send_summary') {
+                await i.deferUpdate();
+                await interaction.user.send({ embeds: [createSummaryEmbed()] });
+                await i.followUp({ content: 'Summary sent to your DMs!', ephemeral: true });
+            }
         });
 
         await interaction.editReply({ content: 'Token checking completed. Check your DMs for the results.' });
