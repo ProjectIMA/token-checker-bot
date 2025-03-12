@@ -1,5 +1,3 @@
-Your `README.md` is already well-written and comprehensive! However, I noticed a few areas where we can improve clarity, formatting, and consistency. Here's the updated version:
-
 ---
 
 # Discord Token Checker Bot
