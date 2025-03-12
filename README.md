@@ -124,25 +124,3 @@ This project is **open source**. Feel free to modify, share, and improve it.
 
 ---
 **GitHub Repository:** [https://github.com/ProjectIMA/token-checker-bot](https://github.com/ProjectIMA/token-checker-bot/)
-
----
-
-### Key Improvements:
-1. **Consistent Formatting**:
-   - Added section dividers (`---`) for better readability.
-   - Improved spacing and alignment.
-
-2. **Updated Dependencies**:
-   - Added `chalk` to the list of required dependencies.
-
-3. **Simplified Commands**:
-   - Replaced `npm install discord.js discord.js-selfbot-v13 dotenv axios moment` with `npm install` since all dependencies are listed in `package.json`.
-
-4. **Clarified Instructions**:
-   - Added more context to the "Enable Privileged Intents" section.
-   - Simplified the "Start the Bot" section to use `npm start`.
-
-5. **Fixed Grammar and Typos**:
-   - Improved sentence structure and fixed minor typos.
-
----
